@@ -1,36 +1,43 @@
 import hashlib
 
-def calcular_sha256(dato: str) -> str:
-    """Devuelve el hash SHA-256 de una cadena de texto."""
-    return hashlib.sha256(dato.encode('utf-8')).hexdigest()
+def calcular_sha256(dato: str | int, prefijo: bytes = b"") -> str:
+    """
+    Convierte 'dato' a texto si es un entero y calcula su hash SHA-256.
+    Acepta un prefijo de bytes para separación de dominios.
+    """
+    # Convertimos a string por si se recibe un int y luego a bytes
+    bytes_dato = str(dato).encode('utf-8')
+    return hashlib.sha256(prefijo + bytes_dato).hexdigest()
 
-def construir_arbol_merkle(transacciones: list[str]) -> str:
+def construir_arbol_merkle(transacciones: list[str | int]) -> str:
+    """
+    Construye el Árbol de Merkle para una lista de cadenas de texto y/o enteros.
+    """
     if not transacciones:
         return ""
     
-    # Paso 1 y 2: Hashear cada transacción para crear las hojas del árbol
-    nivel_actual = [calcular_sha256(tx) for tx in transacciones]
+    # Hojas: Prefijo b"\x00" para indicar que es un dato base
+    nivel_actual = [calcular_sha256(tx, prefijo=b"\x00") for tx in transacciones]
     
-    # Paso 5: Repetir hasta llegar a un solo hash (la Raíz de Merkle)
+    # Reducción por niveles
     while len(nivel_actual) > 1:
-        siguiente_nivel = []
-        
-        # Paso 3: Si el número de nodos es impar, duplicamos el último
+        # Si el nivel es impar, duplicamos el último hash
         if len(nivel_actual) % 2 != 0:
             nivel_actual.append(nivel_actual[-1])
             
-        # Paso 4: Combinar pares de hashes
+        siguiente_nivel = []
         for i in range(0, len(nivel_actual), 2):
-            hash_combinado = calcular_sha256(nivel_actual[i] + nivel_actual[i+1])
-            siguiente_nivel.append(hash_combinado)
+            # Nodos internos: Prefijo b"\x01" para indicar que es un nodo intermedio
+            combinacion = nivel_actual[i] + nivel_actual[i+1]
+            hash_nodo = calcular_sha256(combinacion, prefijo=b"\x01")
+            siguiente_nivel.append(hash_nodo)
             
         nivel_actual = siguiente_nivel
         
-    # Devolver la raíz de Merkle
     return nivel_actual[0]
 
-# --- Prueba con datos de ejemplo ---
-datos = ["Transaccion 1", "Transaccion 2", "Transaccion 3", "Transaccion 4"]
-merkle_root = construir_arbol_merkle(datos)
+# --- Ejemplo de uso con cadenas y enteros ---
+datos = ["Pago de nomina", 5000, "Transferencia 01", 1200]
 
+merkle_root = construir_arbol_merkle(datos)
 print(f"Raíz de Merkle: {merkle_root}")
