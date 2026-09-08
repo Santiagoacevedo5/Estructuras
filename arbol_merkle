@@ -1,0 +1,36 @@
+import hashlib
+
+def calcular_sha256(dato: str) -> str:
+    """Devuelve el hash SHA-256 de una cadena de texto."""
+    return hashlib.sha256(dato.encode('utf-8')).hexdigest()
+
+def construir_arbol_merkle(transacciones: list[str]) -> str:
+    if not transacciones:
+        return ""
+    
+    # Paso 1 y 2: Hashear cada transacción para crear las hojas del árbol
+    nivel_actual = [calcular_sha256(tx) for tx in transacciones]
+    
+    # Paso 5: Repetir hasta llegar a un solo hash (la Raíz de Merkle)
+    while len(nivel_actual) > 1:
+        siguiente_nivel = []
+        
+        # Paso 3: Si el número de nodos es impar, duplicamos el último
+        if len(nivel_actual) % 2 != 0:
+            nivel_actual.append(nivel_actual[-1])
+            
+        # Paso 4: Combinar pares de hashes
+        for i in range(0, len(nivel_actual), 2):
+            hash_combinado = calcular_sha256(nivel_actual[i] + nivel_actual[i+1])
+            siguiente_nivel.append(hash_combinado)
+            
+        nivel_actual = siguiente_nivel
+        
+    # Devolver la raíz de Merkle
+    return nivel_actual[0]
+
+# --- Prueba con datos de ejemplo ---
+datos = ["Transaccion 1", "Transaccion 2", "Transaccion 3", "Transaccion 4"]
+merkle_root = construir_arbol_merkle(datos)
+
+print(f"Raíz de Merkle: {merkle_root}")
