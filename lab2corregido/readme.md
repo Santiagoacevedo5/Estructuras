@@ -16,9 +16,9 @@ En cumplimiento con las buenas prácticas académicas y de desarrollo, se declar
 * **Función:** `localizar_ruta_hermanos()`
 * **Aporte de la IA:** Implementación de la búsqueda recursiva a través del árbol binario para recolectar las parejas de hashes hermanos (*Proof Path*) necesarias para validar una transacción sin procesar todo el árbol.
 
-### 3. Refactorización de Nombres y Estructura
-* **Ámbito:** Nombres de variables, clases y funciones.
-* **Aporte de la IA:** Renombrado general del código fuente para mejorar la legibilidad y cumplir con estándares de nombrado claros (*Clean Code*).
+### 3. Función para Imprimir el Diagrama
+* **Función:** `mostra_grafico_arbol()`
+* **Aporte de la IA:** Elaboración e implementación de la función que nos permite ver el árbol de una manera clara y concisa
 
 ---
 
