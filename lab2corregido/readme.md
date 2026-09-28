@@ -56,9 +56,12 @@ Utiliza recursividad para convertir los objetos de la clase `NodoMerkle` a objet
 
 ### Prerrequisitos
 * **Python 3.10+**
-
+## Como ejecutarlo:
+copiar y pegar en la consola de comandos
+python merkle_tree.py
 ### Dependencias
 Instala la biblioteca necesaria para la representación visual en consola:
 
 ```bash
 pip install binarytree
+
