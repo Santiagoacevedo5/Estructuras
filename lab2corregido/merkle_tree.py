@@ -1,10 +1,6 @@
 # Librería estándar de Python utilizada para generar hashes
 import hashlib
 
-# Librería utilizada para representar gráficamente el árbol en la consola. 
-# Se renombra Node para diferenciarlo de la clase NodoMerkle creada para el árbol.
-from binarytree import Node as VisualizadorArbol
-
 
 class NodoMerkle:
     """Representa un nodo dentro de la estructura del árbol de Merkle."""
@@ -54,7 +50,7 @@ def generar_nivel_superior(nodos_actuales):
         nodo_padre.izquierdo = hijo_izq
         nodo_padre.derecho = hijo_der
         siguiente_nivel.append(nodo_padre)
-        
+
     return siguiente_nivel
 
 
@@ -83,29 +79,75 @@ def editar_transaccion(hojas_hash, nodo_raiz):
     # Se reconstruye la estructura con el cambio.
     raiz_actualizada = construir_arbol_merkle(hojas_hash)
     print(f"\nRaíz original: {nodo_raiz.clave_hash}")
-    print(f"Raíz modificada: {raiz_actualizada.clave_hash}")
+    print(f"Raíz modificada: {raiz_actualizada.clave_hash}\n")
     # Se despliega el gráfico con el árbol resultante.
+    print("Árbol modificado:")
     mostrar_grafico_arbol(raiz_actualizada)
 
 
-def adaptar_a_formato_grafico(nodo_merkle, longitud_vista=8):
-    """Convierte un NodoMerkle en un nodo compatible con la librería de visualización."""
+def obtener_lineas_ascii(nodo):
+    """Genera recursivamente las líneas formateadas en ASCII para construir la jerarquía."""
+    if nodo is None:
+        return [], 0, 0, 0
 
-    # Caso base del recorrido recursivo.
-    if nodo_merkle is None:
-        return None
-    # Se toma un fragmento del hash para una representación más limpia.
-    nodo_visual = VisualizadorArbol(nodo_merkle.clave_hash[:longitud_vista])
-    # Conversión recursiva de las ramas.
-    nodo_visual.left = adaptar_a_formato_grafico(nodo_merkle.izquierdo, longitud_vista)
-    nodo_visual.right = adaptar_a_formato_grafico(nodo_merkle.derecho, longitud_vista)
-    return nodo_visual
+    etiqueta = f"[{nodo.clave_hash[:8]}]"
+
+    # Si es una hoja (sin hijos)
+    if nodo.izquierdo is None and nodo.derecho is None:
+        linea = etiqueta
+        ancho = len(linea)
+        alto = 1
+        centro = ancho // 2
+        return [linea], ancho, alto, centro
+
+    # Recursión para el hijo izquierdo y derecho
+    lineas_izq, ancho_izq, alto_izq, centro_izq = obtener_lineas_ascii(nodo.izquierdo)
+    lineas_der, ancho_der, alto_der, centro_der = obtener_lineas_ascii(nodo.derecho)
+
+    ancho_etiqueta = len(etiqueta)
+
+    # Espaciado entre subárboles
+    separacion = 2
+    ancho_total = max(ancho_izq + separacion + ancho_der, ancho_etiqueta)
+
+    # Cálculo de posiciones de conexión
+    centro_real_izq = centro_izq
+    centro_real_der = ancho_izq + separacion + centro_der
+    centro_padre = (centro_real_izq + centro_real_der) // 2
+
+    # Línea 1: El nodo actual (padre)
+    linea_padre = " " * (centro_padre - ancho_etiqueta // 2) + etiqueta
+    linea_padre = linea_padre.ljust(ancho_total)
+
+    # Línea 2: Ramas de conexión ASCII
+    rama = [" "] * ancho_total
+    rama[centro_real_izq] = "+"
+    for i in range(centro_real_izq + 1, centro_padre):
+        rama[i] = "-"
+    rama[centro_padre] = "|"
+    for i in range(centro_padre + 1, centro_real_der):
+        rama[i] = "-"
+    rama[centro_real_der] = "+"
+    linea_rama = "".join(rama)
+
+    # Combinación del nivel inferior
+    lineas_combinadas = []
+    max_alto = max(alto_izq, alto_der)
+
+    for i in range(max_alto):
+        izq_p = lineas_izq[i] if i < alto_izq else " " * ancho_izq
+        der_p = lineas_der[i] if i < alto_der else " " * ancho_der
+        lineas_combinadas.append(izq_p + " " * separacion + der_p)
+
+    lineas_resultado = [linea_padre, linea_rama] + lineas_combinadas
+    return lineas_resultado, len(linea_padre), len(lineas_resultado), centro_padre
 
 
 def mostrar_grafico_arbol(nodo_raiz):
-    """Muestra la estructura en formato de árbol dentro de la terminal."""
-    arbol_convertido = adaptar_a_formato_grafico(nodo_raiz)
-    print(arbol_convertido)
+    """Muestra el diagrama ASCII completo en la terminal."""
+    lineas, _, _, _ = obtener_lineas_ascii(nodo_raiz)
+    for linea in lineas:
+        print(linea)
 
 
 def verificar_pertenencia_bloque3(nodo_raiz):
@@ -143,12 +185,12 @@ def localizar_ruta_hermanos(nodo_actual, hash_objetivo, camino_verificacion):
         return nodo_actual.clave_hash == hash_objetivo
 
     # Búsqueda en la rama izquierda.
-    if localizar_ruta_hermanos(nodo_actual.izquierdo, hash_objetivo, camino_verificacion):
+    if nodo_actual.izquierdo and localizar_ruta_hermanos(nodo_actual.izquierdo, hash_objetivo, camino_verificacion):
         camino_verificacion.append(("derecha", nodo_actual.derecho.clave_hash))
         return True
 
     # Búsqueda en la rama derecha.
-    if localizar_ruta_hermanos(nodo_actual.derecho, hash_objetivo, camino_verificacion):
+    if nodo_actual.derecho and localizar_ruta_hermanos(nodo_actual.derecho, hash_objetivo, camino_verificacion):
         camino_verificacion.append(("izquierda", nodo_actual.izquierdo.clave_hash))
         return True
 
@@ -163,7 +205,8 @@ def ejecutar_programa():
     hojas_hashes = registrar_transacciones(num_registros)
     # Generación de la raíz inicial.
     raiz_principal = construir_arbol_merkle(hojas_hashes)
-    print(f"Raiz: {raiz_principal.clave_hash}")
+    print(f"\nRaiz: {raiz_principal.clave_hash}\n")
+    print("Estructura del Árbol de Merkle (Diagrama ASCII):")
     mostrar_grafico_arbol(raiz_principal)
 
     # Ciclo de interacción del menú.
