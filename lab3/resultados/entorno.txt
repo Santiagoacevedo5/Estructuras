@@ -1,0 +1,16 @@
+Fecha: 2026-10-11 15:08
+Sistema operativo: Windows-11-10.0.26200-SP0
+Procesador: AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD
+Núcleos lógicos: 32
+RAM: 16
+Python: 3.14.7 (CPython)
+Reloj: time.perf_counter (QueryPerformanceCounter()), resolución 1.0e-07 s
+Orden del árbol B+: 32
+VALORES_N: [100, 300, 1000, 3000, 10000, 30000, 100000]
+BUSQUEDAS_POR_LOTE: 1000
+VALORES_M: [100, 300, 1000, 3000, 10000]
+N_FIJO: 10000
+REPETICIONES: 20
+VENTANA_MINIMA_S: 1.0
+MAX_N_ABB_ORDENADO: 30000
+CARPETA: C:\Users\santi\OneDrive\Escritorio\Arboles\resultados
